@@ -31,6 +31,17 @@ def build_parser() -> argparse.ArgumentParser:
     list_parser.add_argument("context", help="Routing context, e.g. Manito, Sea of Ink, or Steven")
     list_parser.add_argument("--limit", type=int, default=10, help="Number of messages to list")
 
+    route_parser = subparsers.add_parser("email-route", help="Show which inbox would be used for a context")
+    route_parser.add_argument("context", help="Routing context, e.g. Manito, Sea of Ink, or Steven")
+
+    test_parser = subparsers.add_parser("email-test", help="Send a test email and then list the inbox")
+    test_parser.add_argument("context", help="Routing context, e.g. Manito, Sea of Ink, or Steven")
+    test_parser.add_argument("to", help="Recipient email address")
+    test_parser.add_argument("subject", help="Email subject")
+    test_parser.add_argument("text", help="Plain-text email body")
+    test_parser.add_argument("--html", help="Optional HTML email body")
+    test_parser.add_argument("--limit", type=int, default=10, help="Number of messages to list after send")
+
     return parser
 
 
@@ -53,6 +64,18 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "email-list":
+        messages = email_router.list_messages(args.context, limit=args.limit)
+        print(messages)
+        return 0
+
+    if args.command == "email-route":
+        route = email_router.route_for(args.context)
+        print(f"{route.name}: {route.inbox_id}")
+        return 0
+
+    if args.command == "email-test":
+        send_result = email_router.send(args.context, args.to, args.subject, args.text, html=args.html)
+        print(send_result)
         messages = email_router.list_messages(args.context, limit=args.limit)
         print(messages)
         return 0
